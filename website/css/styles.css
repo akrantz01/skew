@@ -1,0 +1,15 @@
+@import url('https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;700&display=swap');
+
+@font-face {
+  font-family: "QUIRKYSPRINGRegulr";
+  src: url("./fonts/QUIRKYSPRING-Regular.woff") format("woff"), /* Modern Browsers */
+    url("./fonts/QUIRKYSPRING-Regular.woff2") format("woff2"); /* Modern Browsers */
+  font-weight: normal;
+  font-style: normal;
+}
+
+:root{
+  --white: #F2F2F2;
+  --red: #EA4335;
+  --blue: #4285F4;
+}
