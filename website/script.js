@@ -7,7 +7,6 @@ var $win = $(window),
     h = $win.height();
   };
 
-
 var average = function(a, b) {
   return [0.5 * (a[0] + b[0]), 0.5 * (a[1] + b[1]), 0.5 * (a[1] + b[1])];
 }
@@ -18,12 +17,10 @@ var leftMiddle = [66, 133, 244]; // red
 var rightMiddle = [234, 67, 53]; // blue
 var bottomMiddle = [88, 57, 84]; // black-purple
 
-
 var topLeft = average(leftMiddle, topMiddle);
 var topRight = average(topMiddle, rightMiddle);
 var bottomLeft = average(leftMiddle, bottomMiddle);
 var bottomRight = average(bottomMiddle, rightMiddle);
-
 
 var interpolate2D = function(x00, x01, x10, x11, x, y) {
   return x00 * (1 - x) * (1 - y) + x10 * x * (1 - y) + x01 * (1 - x) * y + x11 * x * y;
@@ -36,7 +33,6 @@ var interpolateArray = function(x00, x01, x10, x11, x, y) {
   }
   return result;
 }
-
 
 $win.resize(getWidth).mousemove(function(e) {
   var positionX = e.pageX / w;
