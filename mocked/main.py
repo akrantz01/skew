@@ -20,8 +20,6 @@ processing = []
 
 
 class ProcessingRequest(BaseModel):
-    type: int
-    platform: str
     id: str
     text: str
     url: str
@@ -69,7 +67,7 @@ async def process(req: ProcessingRequest):
     """
     if randint(0, 1) == 0:
         # Generate the hash
-        processing_id = sha256(f"{req.id}_{req.platform}_{req.text}".encode()).hexdigest()
+        processing_id = sha256(f"{req.id}_{req.text}".encode()).hexdigest()
         processing.append(processing_id)
 
         return {"processing": True, "success": True, "hash": processing_id}
