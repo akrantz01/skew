@@ -1,0 +1,95 @@
+body {
+  overflow-x: hidden;
+  height: 100vh;
+  /* background-color: ; */
+  background-image: url("../img/background.svg");
+
+  background-attachment: fixed;
+  background-position: center;
+  background-size: cover;
+}
+
+.fake-scroll {
+  position: absolute;
+  top: 0;
+  width: 1px;
+}
+
+.container {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  grid-gap: 0 10%;
+  justify-items: end;
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+}
+
+.imageBackground {
+  background-color: white;
+  height: 30vh
+}
+.image {
+  position: relative;
+  width: 300px;
+  height: 50vh;
+  padding-bottom: 50vh;
+
+  background-repeat: no-repeat;
+  background-position: center;
+}
+
+.image:nth-child(2n) {
+  justify-self: start;
+}
+
+.image:nth-child(1) {
+  background-image: url("../img/elephant.svg");
+}
+
+.image:nth-child(2) {
+  background-image: url("../img/donkey.svg");
+}
+
+.image:nth-child(3) {
+  background-image: url("../logo.pdf");
+}
+
+.image:nth-child(4) {
+  background-image: url("../img/twitter.png");
+}
+
+.image:nth-child(5) {
+  background-image: url("../img/ivy.jpg");
+}
+
+.image:nth-child(6) {
+  background-image: url("../img/cnn.png");
+}
+
+/* .image:nth-child(7) {
+  background-image: url("../img/image7.jpg");
+}
+
+.image:nth-child(8) {
+  background-image: url("../img/image8.jpg");
+}
+
+.image:nth-child(9) {
+  background-image: url("../img/image9.jpg");
+}
+
+.image:nth-child(10) {
+  background-image: url("../img/image10.jpg");
+} */
+
+@media screen and (max-width: 760px) {
+  .container {
+    grid-template-columns: 1fr;
+    justify-items: center;
+  }
+  .image:nth-child(2n) {
+    justify-self: center;
+  }
+}
