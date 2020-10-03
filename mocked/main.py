@@ -1,20 +1,18 @@
 from enum import Enum
-import json
 from hashlib import sha256
 from random import randint
 from typing import Optional
 
-from asyncio import sleep
-from fastapi import FastAPI
+from fastapi import FastAPI, status
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import StreamingResponse
+from fastapi.responses import JSONResponse
 from pydantic import BaseModel
 
 BIAS = ["left", "right"]
 EXTENT = ["minimal", "moderate", "strong", "extreme"]
 
 app = FastAPI(docs_url=None, redoc_url="/docs")
-app.add_middleware(CORSMiddleware, allow_origins=["*"])
+app.add_middleware(CORSMiddleware, allow_origins=["*"], allow_methods=["*"])
 
 processing = []
 
@@ -52,7 +50,8 @@ class Response(BaseModel):
     extent: Optional[Extent]
 
 
-class StreamMessage(BaseModel):
+class ProcessedResponse(BaseModel):
+    success: bool
     hash: str
     bias: Bias
     extent: Extent
@@ -75,34 +74,20 @@ async def process(req: ProcessingRequest):
         return {"processing": False, "success": True, "bias": BIAS[randint(0, 1)], "extent": EXTENT[randint(0, 3)]}
 
 
-async def event_stream():
+@app.get("/process/{job_hash}", response_model=ProcessedResponse)
+async def processed(job_hash: str):
     """
-    A fake event stream for processed data
+    Query the database for a processed message based on its hash.
     """
-    while True:
-        await sleep(randint(2, 10))
+    if randint(0, 1) == 0:
+        return JSONResponse(content={"success": False}, status_code=status.HTTP_404_NOT_FOUND)
 
-        try:
-            proc_id = processing.pop()
-        except IndexError:
-            proc_id = sha256(b"user-id_platform_some text").hexdigest()
-
-        data = {"hash": proc_id, "bias": BIAS[randint(0, 1)], "extent": EXTENT[randint(0, 3)]}
-        yield f"""data: {json.dumps(data)}\n\n"""
-
-
-@app.get("/events", response_model=StreamMessage)
-async def events():
-    """
-    Read a stream of all processing events. The processed events will be identified by a hash of the id, content, and
-    URL. It is up to the requester to determine which event to read.
-
-    **NOTE:** While the response content type is stated as `application/json`, it is actually a `text/event-stream` that
-    sends JSON messages delimited by two newlines in accordance with the server-sent events specification. The messages
-    can be read using the [EventSource](https://developer.mozilla.org/en-US/docs/Web/API/Server-sent_events) API in the
-    browser.
-    """
-    return StreamingResponse(event_stream(), media_type="text/event-stream")
+    return {
+        "success": True,
+        "hash": job_hash,
+        "bias": BIAS[randint(0, 1)],
+        "extent": EXTENT[randint(0, 3)]
+    }
 
 
 if __name__ == "__main__":
