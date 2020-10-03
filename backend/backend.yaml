@@ -3,6 +3,9 @@ runtime: python38
 service: default
 instance_class: F1
 
+env_variables:
+  PUBLISHER_TOPIC: "processing-queue"
+
 entrypoint: daphne -p $PORT main:app
 
 handlers:
