@@ -1,0 +1,4 @@
+daphne==2.5.0
+fastapi==0.61.1
+pydantic==1.6.1
+Twisted[tls,http2]==20.3.0
