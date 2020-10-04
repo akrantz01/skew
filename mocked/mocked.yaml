@@ -1,0 +1,11 @@
+runtime: python38
+
+service: mocked
+instance_class: F1
+
+entrypoint: daphne -p $PORT main:app
+
+handlers:
+  - url: /.*
+    secure: always
+    script: auto
