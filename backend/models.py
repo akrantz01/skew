@@ -37,6 +37,5 @@ class Response(BaseModel):
     The response for (potentially) queuing a piece of text to be processed
     """
     success: bool
-    hash: Optional[str]
     bias: Optional[Bias]
     extent: Optional[Extent]
