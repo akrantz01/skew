@@ -60,8 +60,8 @@ def extract_from_categories(categories: language_v1.types.ClassificationCategory
 async def process(req: models.Request):
     """
     Analyze a given piece of text to find the bias. Any given piece of text will be checked against the database to
-    check if it has already been processed. If it has not yet been processed, it will be queued for processing and
-    returned via the `/events` endpoint.
+    check if it has already been processed. If it has not yet been processed, it will be sent for inference on
+    a GCP NLP trained model.
     """
     # Calculate hash of id and text
     job_hash = compute_job_hash(req.id, req.text)
