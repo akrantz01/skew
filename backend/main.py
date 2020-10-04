@@ -1,15 +1,22 @@
 from hashlib import sha256
 from os import environ
+from typing import List, Tuple
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from google.cloud import firestore, language_v1
+from google.cloud import firestore, automl
+from newspaper import Article, ArticleException
 
 import models
 
+# Project level constants
+PROJECT_ID = environ.get("GOOGLE_CLOUD_PROJECT")
+MODEL_ID = environ.get("MODEL_ID")
+MODEL_PATH = automl.AutoMlClient.model_path(PROJECT_ID, "us-central1", MODEL_ID)
+
 # Service clients
 db = firestore.Client()
-language = language_v1.LanguageServiceClient()
+predictor = automl.PredictionServiceClient()
 
 # HTTP API server
 app = FastAPI()
@@ -30,7 +37,7 @@ def compute_job_hash(content_id: str, text: str) -> str:
     return writer.hexdigest()
 
 
-def extract_from_categories(categories: language_v1.types.ClassificationCategory):
+def extract_from_categories(categories: List[automl.AnnotationPayload]) -> Tuple[str, str]:
     """
     Retrieve the bias and extent from a list of categories from a response.
 
@@ -44,16 +51,16 @@ def extract_from_categories(categories: language_v1.types.ClassificationCategory
     #   Bias: left, right, neutral
     #   Extent: minimal, moderate, strong, extreme
     for category in categories:
-        if category.name == "left" or category.name == "right" or category.name == "neutral":
+        if category.display_name == "left" or category.display_name == "right" or category.display_name == "neutral":
             biases.append(category)
         else:
             extents.append(category)
 
     # Find most confident category
-    biases.sort(key=lambda c: c.confidence)
-    extents.sort(key=lambda c: c.confidence)
+    biases.sort(key=lambda c: c.classification.score)
+    extents.sort(key=lambda c: c.classification.score)
 
-    return biases[0], extents[0]
+    return biases[0].display_name, extents[0].display_name
 
 
 @app.post("/process", response_model=models.Response)
@@ -63,8 +70,24 @@ async def process(req: models.Request):
     check if it has already been processed. If it has not yet been processed, it will be sent for inference on
     a GCP NLP trained model.
     """
+    # Either fetch the content from the site or use the provided text
+    if req.url != "":
+        try:
+            article = Article(req.url)
+            article.download()
+            article.parse()
+
+            if article.text != "" and article.text is not None:
+                text = article.text
+            else:
+                text = req.text
+        except ArticleException:
+            text = req.text
+    else:
+        text = req.text
+
     # Calculate hash of id and text
-    job_hash = compute_job_hash(req.id, req.text)
+    job_hash = compute_job_hash(req.id, text)
 
     # Ensure job has not been computed or is being computed
     job_ref = db.collection("text").document(job_hash)
@@ -78,12 +101,10 @@ async def process(req: models.Request):
         }
 
     # Process the data
-    response = language.classify_text({
-        "content": req.text,
-        "type": language_v1.enums.Document.Type.PLAIN_TEXT,
-        "language": "en",
-    })
-    bias, extent = extract_from_categories(response.categories)
+    snippet = automl.TextSnippet(content=text, mime_type="text/plain")
+    payload = automl.ExamplePayload(text_snippet=snippet)
+    response = predictor.predict(name=MODEL_PATH, payload=payload)
+    bias, extent = extract_from_categories(response.payload)
 
     # Set the processed data to the database
     job_ref.set({

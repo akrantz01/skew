@@ -4,7 +4,7 @@ service: default
 instance_class: F1
 
 env_variables:
-  PUBLISHER_TOPIC: "processing-queue"
+  MODEL_ID: "TCN5806496717029244928"
 
 entrypoint: daphne -p $PORT main:app
 
