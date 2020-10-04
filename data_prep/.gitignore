@@ -1,0 +1,10 @@
+# Intermediary files/folders
+downloaded/
+failed/
+logs/
+segments/
+newsArticlesWithLabels.csv
+processed-news-articles.csv
+
+# Final data
+final-data.csv
