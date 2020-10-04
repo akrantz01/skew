@@ -1,24 +1,15 @@
 from hashlib import sha256
-import json
 from os import environ
 
-from fastapi import FastAPI, status
+from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import JSONResponse
-from google.cloud import firestore, pubsub_v1
+from google.cloud import firestore, language_v1
 
 import models
 
-# Project level constants
-PROJECT_ID = environ.get("GOOGLE_CLOUD_PROJECT")
-TOPIC_ID = environ.get("PUBLISHER_TOPIC") or "processing-queue"
-
-# Database client
+# Service clients
 db = firestore.Client()
-
-# Pub/sub client
-publisher = pubsub_v1.PublisherClient()
-to_be_processed_topic = publisher.topic_path(PROJECT_ID, TOPIC_ID)
+language = language_v1.LanguageServiceClient()
 
 # HTTP API server
 app = FastAPI()
@@ -39,7 +30,33 @@ def compute_job_hash(content_id: str, text: str) -> str:
     return writer.hexdigest()
 
 
-@app.post("/process", response_model=models.ProcessingResponse)
+def extract_from_categories(categories: language_v1.types.ClassificationCategory):
+    """
+    Retrieve the bias and extent from a list of categories from a response.
+
+    :param categories: the detected categories
+    :return: the bias and extent parameters
+    """
+    biases = []
+    extents = []
+
+    # Sort categories by type
+    #   Bias: left, right, neutral
+    #   Extent: minimal, moderate, strong, extreme
+    for category in categories:
+        if category.name == "left" or category.name == "right" or category.name == "neutral":
+            biases.append(category)
+        else:
+            extents.append(category)
+
+    # Find most confident category
+    biases.sort(key=lambda c: c.confidence)
+    extents.sort(key=lambda c: c.confidence)
+
+    return biases[0], extents[0]
+
+
+@app.post("/process", response_model=models.Response)
 async def process(req: models.Request):
     """
     Analyze a given piece of text to find the bias. Any given piece of text will be checked against the database to
@@ -56,50 +73,30 @@ async def process(req: models.Request):
         job_data = job.to_dict()
         return {
             "success": True,
-            "processing": job_data["processing"],
-            "hash": job_hash,
             "bias": job_data.get("bias"),
             "extent": job_data.get("extent")
         }
 
-    # Set the unprocessed data to the database
-    job_ref.set({
-        "processing": True,
-        "url": req.url,
-        "text": req.text
+    # Process the data
+    response = language.classify_text({
+        "content": req.text,
+        "type": language_v1.enums.Document.Type.PLAIN_TEXT,
+        "language": "en",
     })
+    bias, extent = extract_from_categories(response.categories)
 
-    # Publish a message to be processed
-    publisher.publish(to_be_processed_topic, json.dumps({
+    # Set the processed data to the database
+    job_ref.set({
         "hash": job_hash,
-        "text": req.text
-    }).encode())
+        "bias": bias,
+        "extent": extent
+    })
 
     return {
         "success": True,
-        "processing": True,
-        "hash": job_hash
+        "bias": bias,
+        "extent": extent
     }
-
-
-@app.get("/process/{job_hash}", response_model=models.PollingResponse)
-async def processed(job_hash: str):
-    """
-    Query the database for a processed message based on its hash.
-    """
-    # Check if processing has completed
-    job = db.collection("text").document(job_hash).get()
-    job_data = job.to_dict()
-    if job.exists and not job_data.get("processing"):
-        return {
-            "success": True,
-            "hash": job_hash,
-            "bias": job_data.get("bias"),
-            "extent": job_data.get("extent")
-        }
-
-    # Not yet processed, return not found
-    return JSONResponse(content={"success": False}, status_code=status.HTTP_404_NOT_FOUND)
 
 
 if __name__ == "__main__":

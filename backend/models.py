@@ -32,22 +32,11 @@ class Request(BaseModel):
     url: str
 
 
-class ProcessingResponse(BaseModel):
+class Response(BaseModel):
     """
     The response for (potentially) queuing a piece of text to be processed
     """
-    processing: bool
     success: bool
     hash: Optional[str]
     bias: Optional[Bias]
     extent: Optional[Extent]
-
-
-class PollingResponse(BaseModel):
-    """
-    A response from retrieving data from the database
-    """
-    success: bool
-    hash: str
-    bias: Bias
-    extent: Extent
