@@ -15,7 +15,7 @@ After navigating to an article, users can click on the Skew chrome extension. Sk
 
 ## How We Built It
 **Chrome Extension**
-/// Alex + Bisman you should probably write/edit this one.
+We first created a mock backend. Afterward, we took data from "Quantifying News Media Bias through Crowdsourcing and Machine Learning" and fed it into the Google Cloud Natural Language API. It was now time to connect the frontend and the backend. The backend checks for existing data and then creates a placeholder entry for processing. The text is then processed and stored for later use. Finally, the backend sends back the analyzed text.
 
 **Website**
 First, Devonne created a logo on Adobe Illustrator. Then she made a mockup using AdobeXD. Using HTML, CSS, and JQuery she brought it to life. Juan made the skewed rectangles animate as the user scrolled.
@@ -25,11 +25,10 @@ First, Devonne created a logo on Adobe Illustrator. Then she made a mockup using
 We had a difficult time finding a dataset that gives us news articles and perceived political bias. Google Cloud’s Natural Processing API is amazing but, out-of-box features like “sentiment analysis” and “entity level sentiment” were a little too broad. Political bias is subtle so it was paramount to find a specific dataset to train our model on. We solved it by asking for help. A mentor dropped a link to a dataset entitled “Quantifying News Media Bias through Crowdsourcing and Machine Learning”. It was perfect!
 
 **Mock Backend**
-I don’t know if I remember the issue correctly. Alex?
 Using OpenAPI our fantastic backend developer created a mock backend. There was a huge issue in the beginning. It did not work. After 6 hours of Googling and debugging, he finally realized - he didn’t include the correct package.
 
 **Animating the Webpage**
-Juan?
+Animating using Vanilla JavaScript like the joinhoney website for example, is difficult. We had a model that worked, but aesthetically it was not there.
 
 **Changing Text Color Based on Mouse Position**
 The goal was for the “See the Bias” tagline to change color based on whether or not the user was on the right side or the left side of the screen. It took 3 tries from 2 different people but, eventually, Devonne caved and copy/pasted an inefficient solution off of StackOverflow that uses bilinear interpolation.
@@ -42,7 +41,6 @@ Not only that, but we created a product webpage. That way users can understand w
 ## What We Learned
 Devonne learned that AdobeXD allows you to copy the SVG code directly from the software. Previously, she marked assets for export then used the development link to grab those assets. Bypassing the extra step gives her 10% more time to develop. Also, she learned how to edit SVG code - using a text editor. Instead of backtracking to a vector editor when there’s a tiny error, she can now manipulate the code directly.
 
-Alex, Bisman, Juan - add whatever you learned
 
 ## What's Next for Skew?
 We would love to publish the chrome extension on the Google Chrome Extension Store!
